@@ -1,16 +1,26 @@
-export const App = () => {
-  return (
-    <div
-      style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: 40,
-        color: '#010101'
-      }}
-    >
-      React homework template
-    </div>
-  );
-};
+import React, { Component } from 'react';
+import 'react-toastify/dist/ReactToastify.css';
+import SearchBar from './Searchbar/Searchbar';
+import ImageGallery from './ImageGallery';
+import { AppWrap } from './App.styled.js';
+
+class App extends Component {
+  state = {
+    imageName: '',
+  };
+  
+  handleSearchBarSubmit = imageName => {
+    this.setState({ imageName });
+  }
+  
+  render() {
+    return (
+      <AppWrap>
+        <SearchBar onSubmit={this.handleSearchBarSubmit} />
+        <ImageGallery imageName={this.state.imageName} />
+      </AppWrap>
+    );
+  }
+}
+
+export default App;
