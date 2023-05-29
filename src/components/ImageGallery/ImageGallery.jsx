@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ImageGalleryItem from '../ImageGalleryItem';
-import imagesApi from '../Services';
+import imagesApi from '../../services';
 import ImageGalleryErrorView from '../ImageGalleryErrorView';
 import Loader from '../Loader';
 import LoadMore from '../Button';
@@ -19,26 +19,36 @@ class ImageGallery extends Component {
         showModal: false,
         selectedImage: null,
         isLoadingMore: false,
+        hasMoreImages: true,
     };
     
     componentDidUpdate(prevProps, prevState) {
         const prevName = prevProps.imageName;
         const currentName = this.props.imageName;
+        const { page } = this.state;
         
         if (prevName !== currentName) {
             this.setState({ query: currentName, images: null, page: 1 });
             this.loadImages(currentName, 1);
         }
-    }
+        
+        if (prevName !== currentName || prevState.page !== page) {
+            this.loadImages(currentName, page);
+        }
+    };
     
     loadMore = (e) => {
         e.preventDefault();
         
-        const { imageName } = this.props;
-        const { page } = this.state;
-        this.setState({ isLoadingMore: true });
-        this.loadImages(imageName, page + 1);
-};
+        const { hasMoreImages } = this.state;
+        
+        if (hasMoreImages) {
+            this.setState((prevState) => ({
+                page: prevState.page + 1,
+                isLoadingMore: true,
+            }));
+        }
+    };
     
     loadImages = (imageName, page) => {
         this.setState({ status: 'pending' });
@@ -47,11 +57,11 @@ class ImageGallery extends Component {
             .fetchImages(imageName, page)
             .then(images => {
                 if (images.hits.length === 0) {
+                    this.setState({ hasMoreImages: false, isLoadingMore: false });
                     return Promise.reject(new Error(`No images found for '${imageName}'`));
                 }
                 this.setState(prevState => ({
-                    images: prevState.images ? [...prevState.images, ...images.hits] : images.hits,
-                    status: 'resolved',
+                    images: prevState.images ? [...prevState.images, ...images.hits] : images.hits, status: 'resolved',
                     page,
                     isLoadingMore: false,
                 }));
@@ -67,7 +77,8 @@ class ImageGallery extends Component {
     };
     
     render() {
-        const { images, error, status, showModal, selectedImage, isLoadingMore } = this.state;
+        const { images, error, status, showModal, selectedImage, isLoadingMore, hasMoreImages } = this.state;
+        
         if (status === 'idle') {
             return <MessageIdle>Please, enter the name of the image</MessageIdle>;
         }
@@ -94,19 +105,25 @@ class ImageGallery extends Component {
                                     src={hit.webformatURL}
                                     alt={hit.tags}
                                     onClick={() =>
-                                    this.toggleModal(hit.largeImageURL, hit.tags)}/>
+                                        this.toggleModal(hit.largeImageURL, hit.tags)} />
                             </li>
                         ))}
                     </ImageGalleryList>
                     
-                    {images.length > 0 && !isLoadingMore ? (<LoadMore onClick={this.loadMore} />) : (isLoadingMore &&
+                    {!isLoadingMore && hasMoreImages && (
+                        <LoadMore onClick={this.loadMore} />
+                    )}
+                    
+                    {isLoadingMore && (
                         <LoaderWrap>
                             <Loader />
-                        </LoaderWrap>)}
+                        </LoaderWrap>
+                    )}
                     
                     {showModal && selectedImage && (
                         <Modal
-                            onClose={this.toggleModal} largeImage={selectedImage.largeImageURL}
+                            onClose={this.toggleModal}
+                            largeImage={selectedImage.largeImageURL}
                             alt={selectedImage.tags}
                         />
                     )}

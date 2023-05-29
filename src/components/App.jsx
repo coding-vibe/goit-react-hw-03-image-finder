@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
-import SearchBar from './Searchbar/Searchbar';
+import SearchBar from './Searchbar';
 import ImageGallery from './ImageGallery';
 import { AppWrap } from './App.styled.js';
 
