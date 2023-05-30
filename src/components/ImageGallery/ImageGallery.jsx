@@ -45,8 +45,7 @@ class ImageGallery extends Component {
         
         if (totalImages > 0) {
             this.setState((prevState) => ({
-                page: prevState.page + 1,
-                isLoadingMore: true,
+                page: prevState.page + 1
             }));
         }
     };
