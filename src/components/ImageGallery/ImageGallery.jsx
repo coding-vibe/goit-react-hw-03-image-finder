@@ -12,6 +12,7 @@ import { ImageGalleryList, LoaderWrap, MessageIdle } from './ImageGallery.styled
 class ImageGallery extends Component {
     state = {
         images: null,
+        totalImages: 0,
         error: null,
         status: 'idle',
         page: 1,
@@ -19,12 +20,12 @@ class ImageGallery extends Component {
         showModal: false,
         selectedImage: null,
         isLoadingMore: false,
-        hasMoreImages: true,
     };
     
     componentDidUpdate(prevProps, prevState) {
         const prevName = prevProps.imageName;
         const currentName = this.props.imageName;
+        const prevPage = prevState.page;
         const { page } = this.state;
         
         if (prevName !== currentName) {
@@ -32,7 +33,7 @@ class ImageGallery extends Component {
             this.loadImages(currentName, 1);
         }
         
-        if (prevName !== currentName || prevState.page !== page) {
+        if (prevName !== currentName || prevPage !== page) {
             this.loadImages(currentName, page);
         }
     };
@@ -40,9 +41,9 @@ class ImageGallery extends Component {
     loadMore = (e) => {
         e.preventDefault();
         
-        const { hasMoreImages } = this.state;
+        const { totalImages } = this.state;
         
-        if (hasMoreImages) {
+        if (totalImages > 0) {
             this.setState((prevState) => ({
                 page: prevState.page + 1,
                 isLoadingMore: true,
@@ -57,11 +58,12 @@ class ImageGallery extends Component {
             .fetchImages(imageName, page)
             .then(images => {
                 if (images.hits.length === 0) {
-                    this.setState({ hasMoreImages: false, isLoadingMore: false });
                     return Promise.reject(new Error(`No images found for '${imageName}'`));
                 }
                 this.setState(prevState => ({
-                    images: prevState.images ? [...prevState.images, ...images.hits] : images.hits, status: 'resolved',
+                    images: prevState.images ? [...prevState.images, ...images.hits] : images.hits,
+                    totalImages: images.total,
+                    status: 'resolved',
                     page,
                     isLoadingMore: false,
                 }));
@@ -77,10 +79,10 @@ class ImageGallery extends Component {
     };
     
     render() {
-        const { images, error, status, showModal, selectedImage, isLoadingMore, hasMoreImages } = this.state;
+        const { images, totalImages, error, status, showModal, selectedImage, isLoadingMore } = this.state;
         
         if (status === 'idle') {
-            return <MessageIdle>Please, enter the name of the image</MessageIdle>;
+            return <MessageIdle> Please, enter the name of the image </MessageIdle>;
         }
         
         if (status === 'pending') {
@@ -110,7 +112,7 @@ class ImageGallery extends Component {
                         ))}
                     </ImageGalleryList>
                     
-                    {!isLoadingMore && hasMoreImages && (
+                    {!isLoadingMore && images.length < totalImages && (
                         <LoadMore onClick={this.loadMore} />
                     )}
                     
