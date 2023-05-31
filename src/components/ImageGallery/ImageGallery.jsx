@@ -38,17 +38,11 @@ class ImageGallery extends Component {
         }
     };
     
-    loadMore = (e) => {
-        e.preventDefault();
-        
-        const { totalImages } = this.state;
-        
-        if (totalImages > 0) {
-            this.setState((prevState) => ({
-                page: prevState.page + 1
-            }));
-        }
-    };
+    loadMore = () => {
+        this.setState((prevState) => ({
+            page: prevState.page + 1
+        }));
+    }
     
     loadImages = (imageName, page) => {
         this.setState({ status: 'pending' });
